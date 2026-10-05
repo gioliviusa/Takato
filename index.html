@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TAKATO | Conrad Fort Lauderdale Beach</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Montserrat:wght@200;300;400;500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #2B3A4A;
+            --text-color: #F4F0EB;
+            --accent-color: #8E9EAB;
+            --font-serif: 'Cormorant Garamond', serif;
+            --font-sans: 'Montserrat', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; background-color: var(--bg-color); }
+        body {
+            font-family: var(--font-sans);
+            color: var(--text-color);
+            overflow-x: hidden;
+            background-color: var(--bg-color);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        #webgl-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 10; mix-blend-mode: screen; opacity: 0.5;
+        }
+
+        /* ---------- HERO ---------- */
+        .hero {
+            position: relative; height: 100vh; width: 100%;
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; overflow: hidden;
+        }
+        .bg-video {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; z-index: 1; opacity: 1;
+            filter: none;
+        }
+        .hero-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, transparent 0%, var(--bg-color) 95%);
+            z-index: 2;
+        }
+        .hero-content {
+            position: relative; z-index: 5; text-align: center;
+            display: flex; flex-direction: column; align-items: center;
+            will-change: transform;
+        }
+        .logo-leaf { width: 80px; height: 100px; margin-bottom: 20px; color: var(--text-color); opacity: 0.9; }
+        .logo-leaf path { stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+        .logo-text {
+            font-family: var(--font-serif); font-size: clamp(3.5rem, 15vw, 8rem);
+            font-weight: 300; letter-spacing: 0.15em; text-transform: uppercase;
+            line-height: 1; text-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+        .subtitle {
+            font-family: var(--font-sans); font-size: clamp(0.6rem, 2.5vw, 0.9rem);
+            font-weight: 300; letter-spacing: 0.4em; text-transform: uppercase;
+            margin-top: 20px; color: var(--accent-color);
+        }
+        .meaning {
+            font-family: var(--font-serif); font-style: italic;
+            font-size: clamp(0.9rem, 3vw, 1.2rem); margin-top: 15px;
+            color: var(--text-color); opacity: 0.8; letter-spacing: 0.1em;
+        }
+        .scroll-indicator {
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            z-index: 5; display: flex; flex-direction: column; align-items: center;
+            gap: 10px; opacity: 0; animation: fadeIn 2s 1.5s forwards;
+        }
+        .scroll-line {
+            width: 1px; height: 40px;
+            background: linear-gradient(to bottom, var(--text-color), transparent);
+            animation: scrollDown 2s infinite ease-in-out;
+        }
+
+        /* ---------- INTERSTITIAL VIDEO PARALLAX SECTIONS ---------- */
+        .interstitial-video {
+            position: relative;
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 15;
+            background: var(--bg-color);
+        }
+        .interstitial-bg {
+            position: absolute;
+            top: -10%; left: 0;
+            width: 100%; height: 120%; /* Taller to allow parallax movement */
+            object-fit: cover;
+            opacity: 1;
+            filter: none;
+            will-change: transform;
+        }
+        .interstitial-overlay {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            padding: 0 20px;
+        }
+        .interstitial-text {
+            font-family: var(--font-serif);
+            font-size: clamp(1.5rem, 5vw, 3rem);
+            font-weight: 300;
+            font-style: italic;
+            color: var(--text-color);
+            letter-spacing: 0.05em;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        /* ---------- GENERAL SECTION ---------- */
+        section {
+            position: relative; padding: 100px 24px; min-height: 100vh;
+            display: flex; flex-direction: column; justify-content: center;
+            z-index: 20; background-color: var(--bg-color);
+        }
+        .section-content { max-width: 1000px; margin: 0 auto; width: 100%; }
+        .section-title {
+            font-family: var(--font-serif); font-size: clamp(2rem, 8vw, 4rem);
+            font-weight: 300; margin-bottom: 30px; letter-spacing: 0.05em;
+        }
+        .section-text {
+            font-family: var(--font-sans); font-size: clamp(0.9rem, 3vw, 1.05rem);
+            font-weight: 300; line-height: 1.8; color: var(--accent-color);
+            max-width: 700px; margin-bottom: 20px;
+        }
+        .highlight { color: var(--text-color); font-weight: 400; }
+
+        /* ---------- FULL MENU (TABS) ---------- */
+        .full-menu { padding-top: 80px; }
+        .menu-tabs {
+            display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 50px;
+            border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px;
+        }
+        .menu-tab {
+            font-family: var(--font-sans); font-size: 0.8rem; font-weight: 400;
+            letter-spacing: 0.2em; text-transform: uppercase;
+            background: none; border: 1px solid rgba(255,255,255,0.2);
+            color: var(--accent-color); padding: 12px 28px; cursor: pointer;
+            transition: all 0.3s ease; border-radius: 2px;
+        }
+        .menu-tab:hover { border-color: rgba(255,255,255,0.5); color: var(--text-color); }
+        .menu-tab.active {
+            background: var(--text-color); color: var(--bg-color);
+            border-color: var(--text-color); font-weight: 500;
+        }
+
+        .menu-panel { display: none; animation: fadeIn 0.5s ease forwards; }
+        .menu-panel.active { display: block; }
+
+        .menu-category { margin-top: 45px; }
+        .menu-category-title {
+            font-family: var(--font-serif); font-size: 1.8rem; font-weight: 300;
+            margin-bottom: 25px; letter-spacing: 0.1em; color: var(--text-color);
+            border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;
+        }
+        .menu-grid { display: grid; grid-template-columns: 1fr; gap: 30px; }
+        .menu-item { margin-bottom: 10px; }
+        .menu-item h3 {
+            font-family: var(--font-serif); font-size: 1.25rem; font-weight: 400;
+            margin-bottom: 6px; display: flex; justify-content: space-between;
+            align-items: baseline; gap: 10px;
+        }
+        .menu-item p {
+            font-size: 0.83rem; color: var(--accent-color);
+            font-weight: 300; line-height: 1.6; max-width: 90%;
+        }
+        .menu-price {
+            font-family: var(--font-sans); font-size: 0.9rem; font-weight: 300;
+            color: var(--text-color); opacity: 0.8; white-space: nowrap;
+        }
+        .menu-note {
+            font-size: 0.75rem; color: var(--accent-color); opacity: 0.7;
+            font-style: italic; margin-top: 30px;
+        }
+
+        /* ---------- CHEF STORY ---------- */
+        .chef-story { background: linear-gradient(135deg, #1A2530 0%, #2B3A4A 100%); }
+        .chef-grid { display: grid; grid-template-columns: 1fr; gap: 50px; align-items: center; }
+        .chef-image {
+            width: 100%; height: 400px; object-fit: cover; border-radius: 2px;
+            object-position: center top;
+            filter: grayscale(30%) contrast(1.1);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+        .chef-content h2 {
+            font-family: var(--font-serif); font-size: clamp(2rem, 6vw, 3rem);
+            font-weight: 300; margin-bottom: 20px;
+        }
+        .chef-content p {
+            font-family: var(--font-sans); font-size: 0.95rem;
+            color: var(--accent-color); line-height: 1.8;
+            margin-bottom: 15px; font-weight: 300;
+        }
+
+        /* ---------- EVENTS ---------- */
+        .experiences-grid { display: grid; grid-template-columns: 1fr; gap: 40px; margin-top: 40px; }
+        .experience-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            padding: 40px; border-radius: 2px;
+            transition: transform 0.4s ease, border-color 0.4s ease;
+        }
+        .experience-card:hover { transform: translateY(-5px); border-color: rgba(255,255,255,0.2); }
+        .experience-card h3 {
+            font-family: var(--font-serif); font-size: 1.8rem;
+            font-weight: 300; margin-bottom: 15px;
+        }
+        .experience-card p {
+            font-size: 0.9rem; color: var(--accent-color);
+            line-height: 1.7; font-weight: 300;
+        }
+
+        /* ---------- GALLERY ---------- */
+        .gallery-grid { display: grid; grid-template-columns: 1fr; gap: 20px; margin-top: 40px; }
+        .gallery-item {
+            position: relative; overflow: hidden; height: 300px; border-radius: 2px;
+        }
+        .gallery-item img {
+            width: 100%; height: 100%; object-fit: cover;
+            transition: transform 0.6s cubic-bezier(0.16,1,0.3,1);
+        }
+        .gallery-item:hover img { transform: scale(1.05); }
+        .gallery-overlay {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            padding: 20px; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            opacity: 0; transition: opacity 0.4s ease;
+        }
+        .gallery-item:hover .gallery-overlay { opacity: 1; }
+        .gallery-overlay p { font-family: var(--font-serif); font-size: 1.2rem; font-style: italic; }
+
+        /* ---------- FAQ ---------- */
+        .faq-list { margin-top: 40px; }
+        .faq-item { border-bottom: 1px solid rgba(255,255,255,0.1); padding: 25px 0; }
+        .faq-item h3 {
+            font-family: var(--font-serif); font-size: 1.4rem;
+            font-weight: 400; margin-bottom: 10px; color: var(--text-color);
+        }
+        .faq-item p { font-size: 0.9rem; color: var(--accent-color); line-height: 1.7; font-weight: 300; }
+
+        /* ---------- CAREERS ---------- */
+        .careers-section {
+            background: linear-gradient(135deg, #2B3A4A 0%, #1A2530 100%);
+            text-align: center;
+        }
+        .careers-section .section-title { margin-bottom: 20px; }
+        .careers-section .section-text { margin: 0 auto 40px auto; }
+        .careers-btn {
+            display: inline-block; padding: 16px 40px; border: 1px solid var(--text-color);
+            color: var(--text-color); font-family: var(--font-sans); font-size: 0.85rem;
+            letter-spacing: 0.2em; text-transform: uppercase; text-decoration: none;
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+        .careers-btn:hover { background: var(--text-color); color: var(--bg-color); }
+
+        /* ---------- ANIMATIONS ---------- */
+        .reveal {
+            opacity: 0; transform: translateY(40px);
+            transition: opacity 1s cubic-bezier(0.16,1,0.3,1), transform 1s cubic-bezier(0.16,1,0.3,1);
+        }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes scrollDown {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(20px); opacity: 0; }
+        }
+        .parallax { will-change: transform; }
+
+        /* ---------- FOOTER ---------- */
+        footer {
+            padding: 60px 24px; background-color: #1A2530; text-align: center;
+            font-size: 0.75rem; letter-spacing: 0.1em; color: var(--accent-color);
+            font-weight: 300; z-index: 20; position: relative;
+        }
+        footer p { margin-bottom: 10px; }
+
+        /* ---------- RESPONSIVE ---------- */
+        @media (max-width: 480px) {
+            .hero-content { margin-top: -40px; }
+            .logo-leaf { width: 60px; height: 80px; }
+            .subtitle { letter-spacing: 0.3em; font-size: 0.55rem; }
+            .section-title { font-size: 2.2rem; }
+            .experience-card { padding: 25px; }
+            .menu-item h3 { font-size: 1.05rem; }
+            .chef-image { height: 250px; }
+            .menu-tab { padding: 10px 18px; font-size: 0.7rem; }
+            .interstitial-video { height: 40vh; }
+        }
+        @media (min-width: 768px) {
+            .menu-grid { grid-template-columns: 1fr 1fr; gap: 40px; }
+            .experiences-grid { grid-template-columns: 1fr 1fr; }
+            .gallery-grid { grid-template-columns: 1fr 1fr; }
+            .chef-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media (min-width: 1024px) {
+            .gallery-grid { grid-template-columns: 1fr 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- ==================== HERO ==================== -->
+    <section class="hero" id="home">
+        <video autoplay muted loop playsinline class="bg-video" poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Crect width='100%25' height='100%25' fill='%232B3A4A'/%3E%3C/svg%3E">
+            <source src="taFTlVideos/ScreenRecording_10-05-2026%2011-45-30_1.mov">
+        </video>
+        <div class="hero-overlay"></div>
+        <div class="hero-content parallax" data-speed="0.4">
+            <svg class="logo-leaf" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+                <path d="M 50 110 Q 50 80 50 40" stroke-width="2"/>
+                <path d="M 50 80 Q 20 60 10 30 Q 30 50 50 80" stroke-width="1.5"/>
+                <path d="M 40 65 Q 25 45 15 35" stroke-width="0.5" opacity="0.5"/>
+                <path d="M 35 60 Q 22 40 18 30" stroke-width="0.5" opacity="0.5"/>
+                <path d="M 50 70 Q 45 30 55 10 Q 60 40 50 70" stroke-width="1.5"/>
+                <path d="M 50 55 Q 48 30 53 20" stroke-width="0.5" opacity="0.5"/>
+                <path d="M 49 45 Q 47 25 54 15" stroke-width="0.5" opacity="0.5"/>
+                <path d="M 50 85 Q 80 50 90 20 Q 75 60 50 85" stroke-width="1.5"/>
+                <path d="M 60 70 Q 75 45 85 30" stroke-width="0.5" opacity="0.5"/>
+                <path d="M 65 65 Q 80 40 88 25" stroke-width="0.5" opacity="0.5"/>
+            </svg>
+            <h1 class="logo-text">TAKATO</h1>
+            <p class="subtitle">Japanese & Korean Fusion</p>
+            <p class="meaning">A state of extreme happiness</p>
+        </div>
+        <div class="scroll-indicator"><div class="scroll-line"></div></div>
+    </section>
+
+    <!-- ==================== MENU SECTION ==================== -->
+    <section class="full-menu" id="menu">
+        <div class="section-content">
+            <div class="reveal">
+                <h2 class="section-title">The Menu</h2>
+                <p class="section-text">Explore our complete offering — from the 26-foot sushi bar to the oceanfront cocktail lounge.</p>
+
+                <div class="menu-tabs">
+                    <button class="menu-tab active" data-target="sushi">Sushi</button>
+                    <button class="menu-tab" data-target="dinner">Dinner</button>
+                    <button class="menu-tab" data-target="happyhour">Happy Hour</button>
+                    <button class="menu-tab" data-target="cocktails">Cocktails</button>
+                </div>
+
+                <!-- SUSHI -->
+                <div class="menu-panel active" id="panel-sushi">
+                    <div class="menu-category">
+                        <h3 class="menu-category-title">Nigiri & Sashimi</h3>
+                        <div class="menu-grid">
+                            <div class="menu-item">
+                                <h3>Salmon Tataki <span class="menu-price">$26</span></h3>
+                                <p>Organic king salmon marinated in miso for six hours, topped with mustard tofu and served with truffle ponzu.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>Yuzu Kosho Hamachi <span class="menu-price">$28</span></h3>
+                                <p>Thinly sliced yellowtail, yuzu kosho, white soy, micro shiso.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>Chef's Nigiri & Sashimi Platter <span class="menu-price">Market</span></h3>
+                                <p>Chef Taka's work of art — fresh fish sourced mostly from Japan and Spain, served with fresh wasabi root ground tableside.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="menu-category">
+                        <h3 class="menu-category-title">Signature Rolls</h3>
+                        <div class="menu-grid">
+                            <div class="menu-item">
+                                <h3>Crispy Tuna <span class="menu-price">$24</span></h3>
+                                <p>Pan-seared sushi rice topped with tuna and mixed with spicy aioli — a must-have starter.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>Wagyu Crispy Rice <span class="menu-price">$28</span></h3>
+                                <p>Crispy rice topped with seared wagyu, spicy mayo, and scallions.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="menu-note">* Almost all sushi rolls can be adapted to be gluten-free upon request. </p>
+                </div>
+
+                <!-- DINNER -->
+                <div class="menu-panel" id="panel-dinner">
+                    <div class="menu-category">
+                        <h3 class="menu-category-title">Tsumami (Small Plates)</h3>
+                        <div class="menu-grid">
+                            <div class="menu-item">
+                                <h3>Wagyu Gyoza <span class="menu-price">$24</span></h3>
+                                <p>Rich wagyu beef filling, spicy onion ponzu, micro shiso — an absolute must.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>Angry Chicken <span class="menu-price">$22</span></h3>
+                                <p>Crispy marinated chicken tossed in garlic, gochujang and ginger, with tofu feta to ease the spice.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>Duck Bao Bun <span class="menu-price">$23</span></h3>
+                                <p>Slow-roasted duck, hoisin, pickled cucumber, steamed bun.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>Short Rib Kimchi Taco <span class="menu-price">$21</span></h3>
+                                <p>Braised short rib, house-made kimchi, avocado crema, crisp tortilla.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>Mushroom Gyoza <span class="menu-price">$17</span></h3>
+                                <p>Wild mushroom filling, truffle soy, crispy shallots.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>Seabass Croquettes <span class="menu-price">$18</span></h3>
+                                <p>Crispy seabass croquettes, yuzu aioli, micro herbs.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="menu-category">
+                        <h3 class="menu-category-title">Itame Mono (Noodles & Rice)</h3>
+                        <div class="menu-grid">
+                            <div class="menu-item">
+                                <h3>Short Rib Jabche <span class="menu-price">$28</span></h3>
+                                <p>Short rib braised for six hours with sweet potato noodles, stir-fried vegetables, enoki mushrooms, and a fried egg.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>Kimchi Fried Rice <span class="menu-price">$28</span></h3>
+                                <p>Rice, beef, shiitake mushrooms, garlic, poached egg, fermented Napa cabbage and Korean spices — served in a hot stone bowl.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>Lobster Udon <span class="menu-price">$42</span></h3>
+                                <p>Butter-poached lobster, udon noodles, dashi broth, scallions.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="menu-category">
+                        <h3 class="menu-category-title">Land & Sea (Mains)</h3>
+                        <div class="menu-grid">
+                            <div class="menu-item">
+                                <h3>A5 Wagyu Hot Stone <span class="menu-price">$85</span></h3>
+                                <p>Miyazaki A5 wagyu, yuzu kosho, garlic chips, ponzu.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>Chilean Seabass <span class="menu-price">$40</span></h3>
+                                <p>Marinated for more than a full day in soy, mirin and honey — melt-in-your-mouth.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>Wagyu Skirt Steak <span class="menu-price">$36</span></h3>
+                                <p>Wasabi chimichurri, combining South Florida and Japanese influences.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>Grilled Branzino <span class="menu-price">$28</span></h3>
+                                <p>Seasoned with lemon, sea salt and mango kimchi.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>Kobe Ribeye <span class="menu-price">$122</span></h3>
+                                <p>10oz Kobe ribeye, seasonal vegetables, red wine reduction.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>Wagyu Galbi Sliders <span class="menu-price">$32</span></h3>
+                                <p>Marinated wagyu short rib, pickled daikon, brioche bun.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="menu-category">
+                        <h3 class="menu-category-title">Soup & Salad</h3>
+                        <div class="menu-grid">
+                            <div class="menu-item">
+                                <h3>Takato Salad <span class="menu-price">$14</span></h3>
+                                <p>Seasonal greens, house ginger dressing, crispy shallots.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>Tofu & Japanese Eggplant <span class="menu-price">$18</span></h3>
+                                <p>Tofu with Japanese eggplant in truffle ginger soy sauce.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HAPPY HOUR -->
+                <div class="menu-panel" id="panel-happyhour">
+                    <div class="menu-category">
+                        <h3 class="menu-category-title">Happy Hour Specials</h3>
+                        <div class="menu-grid">
+                            <div class="menu-item">
+                                <h3>$7 Wine</h3>
+                                <p>Curated selection by the glass.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>$8 Mixed Drinks</h3>
+                                <p>Well spirits and classic mixes.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>$9 Cocktails</h3>
+                                <p>Select signature cocktails at a special price.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="menu-category">
+                        <h3 class="menu-category-title">Sushi Bites</h3>
+                        <div class="menu-grid">
+                            <div class="menu-item">
+                                <h3>Sushi Bites <span class="menu-price">from $7</span></h3>
+                                <p>Assorted bite-sized sushi selections.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>Duck Bao Buns</h3>
+                                <p>Available at happy hour pricing.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>Mushroom Gyoza</h3>
+                                <p>Crispy mushroom dumplings.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>Short Rib Tacos</h3>
+                                <p>Braised short rib, kimchi, avocado crema.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>Wagyu Crispy Rice</h3>
+                                <p>Seared wagyu over crispy sushi rice.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>Ikura Sashimi</h3>
+                                <p>Salmon roe over shiso leaf.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>Ube Cheesecake</h3>
+                                <p>Purple yam cheesecake — a sweet finish.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="menu-note">Happy Hour: Monday – Thursday, 4:00 PM – 6:00 PM.</p>
+                </div>
+
+                <!-- COCKTAILS -->
+                <div class="menu-panel" id="panel-cocktails">
+                    <div class="menu-category">
+                        <h3 class="menu-category-title">Signature Cocktails</h3>
+                        <div class="menu-grid">
+                            <div class="menu-item">
+                                <h3>Korean Zombie <span class="menu-price">$18</span></h3>
+                                <p>A twist on the classic Zombie with white rum, soju, grapefruit juice, Korean plum extract, lime, and Angostura bitters. Optional kochukaru for a "dirty" version.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>Shikoku Margarita <span class="menu-price">$17</span></h3>
+                                <p>A refreshing and slightly smoky blend of tequila, mezcal, passion fruit, cardamom and agave.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>Sekushi Sour <span class="menu-price">$17</span></h3>
+                                <p>Cognac, apricot liqueur and apple syrup — a rich, culturally-inspired sipper.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>Kentucky Drifter <span class="menu-price">$17</span></h3>
+                                <p>A welcoming union of ginger bourbon, raspberry marmalade and lime.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>Sarang-hae Colada <span class="menu-price">$17</span></h3>
+                                <p>A symphonic blend of vodka, lychee puree, coconut, cranberry bitters, lemon, and rose water.</p>
+                            </div>
+                            <div class="menu-item">
+                                <h3>Fugu Cup <span class="menu-price">$19</span></h3>
+                                <p>A tequila-based cocktail served inside an adorable puffer fish cup — a guest favorite.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="menu-category">
+                        <h3 class="menu-category-title">Zero-Proof Program</h3>
+                        <div class="menu-grid">
+                            <div class="menu-item">
+                                <h3>Zero-Proof Cocktails <span class="menu-price">$12</span></h3>
+                                <p>A dedicated zero-proof program designed to stand confidently alongside the main beverage offerings — same sense of ease and pleasure.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== INTERSTITIAL 1 ==================== -->
+    <div class="interstitial-video">
+        <video autoplay muted loop playsinline class="interstitial-bg parallax-video">
+            <source src="taFTlVideos/ScreenRecording_10-05-2026%2011-45-30_1.mov">
+        </video>
+        <div class="interstitial-overlay">
+            <h2 class="interstitial-text">"The Art of Umami"</h2>
+        </div>
+    </div>
+
+    <!-- ==================== CHEF STORY ==================== -->
+    <section class="chef-story" id="chef">
+        <div class="section-content">
+            <div class="chef-grid">
+                <div class="reveal">
+                    <img src="taFTphotos/chefTaka.webp" alt="Executive Chef Taek Lee" class="chef-image">
+                </div>
+                <div class="chef-content reveal">
+                    <h2 class="section-title">The Chef's Story</h2>
+                    <p>Executive Chef <span class="highlight">Taek "Taka" Lee</span> brings a lifetime of culinary mastery to the Conrad Fort Lauderdale Beach. Born in Korea and driven by a fascination with Japanese cuisine, Chef Lee's journey spans over 26 years of perfecting his craft.</p>
+                    <p>His distinguished career includes tenure at world-renowned establishments such as <span class="highlight">ZUMA, Makoto, and Monkitail</span>. At TAKATO, he masterfully blends the soul of his Korean ancestry with the precise, delicate artistry of Japanese cuisine.</p>
+                    <p>The result is a decadent love letter to South Florida — a menu that is modern, vibrant, and deeply rooted in tradition, served in a space that mirrors the food: sharp, elegant, and unexpectedly dynamic.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== INTERSTITIAL 2 ==================== -->
+    <div class="interstitial-video">
+        <video autoplay muted loop playsinline class="interstitial-bg parallax-video">
+            <source src="taFTlVideos/ScreenRecording_10-05-2026%2011-45-30_1.mov">
+        </video>
+        <div class="interstitial-overlay">
+            <h2 class="interstitial-text">"Exclusive Experiences"</h2>
+        </div>
+    </div>
+
+    <!-- ==================== EVENTS ==================== -->
+    <section class="events" id="events">
+        <div class="section-content">
+            <div class="reveal">
+                <h2 class="section-title">Exclusive Events</h2>
+                <p class="section-text">Elevate your evening with our curated tasting menus and weekend celebrations.</p>
+                <div class="experiences-grid">
+                    <div class="experience-card">
+                        <h3>Omakase by Takato</h3>
+                        <p>An exclusive hidden private room inside the restaurant. Chef Lee hand-serves a 15+ course tasting menu, showcasing the finest seasonal ingredients and his mastery of sushi and Umami. <br><br><em>Approx. $250 per person (plus tax & service).</em></p>
+                    </div>
+                    <div class="experience-card">
+                        <h3>Sunday Brunch</h3>
+                        <p>A lavish fixed menu featuring unlimited mimosas and bellinis. Enjoy a continuous flow of hot and cold appetizers served from tableside dim sum carts, followed by a choice of entree and a decadent dessert platter.</p>
+                    </div>
+                    <div class="experience-card">
+                        <h3>Private Dining</h3>
+                        <p>Host your next special occasion in our exclusive private dining room. With custom menus curated by Chef Lee and dedicated service, we ensure an unforgettable experience for you and your guests.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== INTERSTITIAL 3 ==================== -->
+    <div class="interstitial-video">
+        <video autoplay muted loop playsinline class="interstitial-bg parallax-video">
+            <source src="taFTlVideos/ScreenRecording_10-05-2026%2011-45-30_1.mov">
+        </video>
+        <div class="interstitial-overlay">
+            <h2 class="interstitial-text">"Moments in Time"</h2>
+        </div>
+    </div>
+
+    <!-- ==================== GALLERY ==================== -->
+    <section class="gallery" id="gallery">
+        <div class="section-content">
+            <div class="reveal">
+                <h2 class="section-title">Gallery</h2>
+                <p class="section-text">A glimpse into the TAKATO experience.</p>
+                <div class="gallery-grid">
+                    <div class="gallery-item reveal">
+                        <img src="taFTphotos/chefnigiri.webp" alt="Sushi Platter">
+                        <div class="gallery-overlay"><p>Omakase Selection</p></div>
+                    </div>
+                    <div class="gallery-item reveal">
+                        <img src="taFTphotos/beachview.webp" alt="Oceanfront dining terrace">
+                        <div class="gallery-overlay"><p>Oceanfront Dining</p></div>
+                    </div>
+                    <div class="gallery-item reveal">
+                        <img src="taFTphotos/lambchops.webp" alt="Grilled lamb chops">
+                        <div class="gallery-overlay"><p>Grilled Lamb Chops</p></div>
+                    </div>
+                    <div class="gallery-item reveal">
+                        <img src="taFTphotos/goldspressoMartini.webp" alt="Goldspresso martini">
+                        <div class="gallery-overlay"><p>Goldspresso Martini</p></div>
+                    </div>
+                    <div class="gallery-item reveal">
+                        <img src="taFTphotos/sushibrush.webp" alt="Chef brushing sushi">
+                        <div class="gallery-overlay"><p>Sushi Preparation</p></div>
+                    </div>
+                    <div class="gallery-item reveal">
+                        <img src="taFTphotos/jabche.webp" alt="Korean japchae noodles">
+                        <div class="gallery-overlay"><p>Korean Japchae</p></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== INTERSTITIAL 4 ==================== -->
+    <div class="interstitial-video">
+        <video autoplay muted loop playsinline class="interstitial-bg parallax-video">
+            <source src="taFTlVideos/ScreenRecording_10-05-2026%2011-45-30_1.mov">
+        </video>
+        <div class="interstitial-overlay">
+            <h2 class="interstitial-text">"Join the Journey"</h2>
+        </div>
+    </div>
+
+    <!-- ==================== FAQ ==================== -->
+    <section class="faq" id="faq">
+        <div class="section-content">
+            <div class="reveal">
+                <h2 class="section-title">Frequently Asked Questions</h2>
+                <div class="faq-list">
+                    <div class="faq-item">
+                        <h3>What is the dress code?</h3>
+                        <p>We recommend Business Casual attire for all guests visiting TAKATO.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3>Do I need a reservation?</h3>
+                        <p>Reservations are highly recommended and can be made via OpenTable or by calling us directly at (954) 414-5160.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3>Can you accommodate large parties?</h3>
+                        <p>Yes, for parties larger than 6, please contact our host directly at host@takatorestaurant.com to arrange your dining experience.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3>Where are you located?</h3>
+                        <p>We are located inside the Conrad Fort Lauderdale Beach at 551 N Fort Lauderdale Beach Blvd, Fort Lauderdale, FL 33304.</p>
+                    </div>
+                    <div class="faq-item">
+                        <h3>Is there a cancellation policy?</h3>
+                        <p>Yes, for Omakase and large party reservations, a cancellation fee may apply if not cancelled within 24 hours. Please refer to your reservation confirmation for details.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== CAREERS ==================== -->
+    <section class="careers-section" id="careers">
+        <div class="section-content">
+            <div class="reveal">
+                <h2 class="section-title">Join Our Team</h2>
+                <p class="section-text">We are always looking for passionate, talented individuals to join the TAKATO family. If you share our dedication to culinary excellence and exceptional hospitality, we would love to hear from you.</p>
+                <a href="mailto:careers@takatorestaurant.com" class="careers-btn">View Openings</a>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="reveal">
+            <p>CONRAD FORT LAUDERDALE BEACH</p>
+            <p>551 N Fort Lauderdale Beach Blvd, Fort Lauderdale, FL 33304</p>
+            <p style="margin-top: 20px; opacity: 0.5;">&copy; 2024 TAKATO. ALL RIGHTS RESERVED.</p>
+        </div>
+    </footer>
+
+    <script>
+        // ==================== PARALLAX (HERO + INTERSTITIALS) ====================
+        const heroParallax = document.querySelectorAll('.hero-content');
+        const interstitialVideos = document.querySelectorAll('.parallax-video');
+
+        function updateParallax() {
+            const scrolled = window.pageYOffset;
+
+            // Hero content
+            heroParallax.forEach(el => {
+                const speed = parseFloat(el.dataset.speed) || 0.4;
+                el.style.transform = `translateY(${scrolled * speed}px)`;
+            });
+
+            // Interstitial video backgrounds
+            interstitialVideos.forEach(video => {
+                const parent = video.parentElement;
+                const rect = parent.getBoundingClientRect();
+                
+                // Only animate if the element is in the viewport
+                if (rect.top < window.innerHeight && rect.bottom > 0) {
+                    // Calculate a slower, parallax movement relative to scroll
+                    const speed = 0.2; 
+                    const yPos = (rect.top - window.innerHeight) * speed;
+                    video.style.transform = `translateY(${yPos}px)`;
+                }
+            });
+        }
+
+        let ticking = false;
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                window.requestAnimationFrame(() => { 
+                    updateParallax(); 
+                    ticking = false; 
+                });
+                ticking = true;
+            }
+        });
+
+        // Initial call to set positions correctly on load
+        window.addEventListener('load', updateParallax);
+
+        // ==================== SCROLL REVEAL ====================
+        const revealElements = document.querySelectorAll('.reveal');
+        const revealObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.15, rootMargin: "0px 0px -50px 0px" });
+        revealElements.forEach(el => revealObserver.observe(el));
+
+        // ==================== MENU TABS ====================
+        const tabs = document.querySelectorAll('.menu-tab');
+        const panels = document.querySelectorAll('.menu-panel');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                panels.forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                const targetId = 'panel-' + tab.dataset.target;
+                const targetPanel = document.getElementById(targetId);
+                if (targetPanel) targetPanel.classList.add('active');
+            });
+        });
+
+        // ==================== WEBGL OVERLAY ====================
+        function initWebGL() {
+            const canvas = document.getElementById('webgl-canvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            if (!gl) { console.warn('WebGL not supported.'); return; }
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                gl.viewport(0, 0, canvas.width, canvas.height);
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            const vsSource = `
+                attribute vec2 a_position;
+                void main() { gl_Position = vec4(a_position, 0.0, 1.0); }
+            `;
+            const fsSource = `
+                precision mediump float;
+                uniform float u_time;
+                uniform vec2 u_resolution;
+                float random(vec2 st) { return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123); }
+                float noise(vec2 st) {
+                    vec2 i = floor(st); vec2 f = fract(st);
+                    float a = random(i); float b = random(i + vec2(1.0, 0.0));
+                    float c = random(i + vec2(0.0, 1.0)); float d = random(i + vec2(1.0, 1.0));
+                    vec2 u = f * f * (3.0 - 2.0 * f);
+                    return mix(a, b, u.x) + (c - a)* u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
+                }
+                void main() {
+                    vec2 st = gl_FragCoord.xy / u_resolution.xy;
+                    st.x *= u_resolution.x / u_resolution.y;
+                    float n = noise(st * 4.0 + u_time * 0.2);
+                    vec3 color1 = vec3(0.16, 0.22, 0.29);
+                    vec3 color2 = vec3(0.25, 0.33, 0.42);
+                    vec3 finalColor = mix(color1, color2, n);
+                    float glow = smoothstep(0.4, 0.8, n);
+                    gl_FragColor = vec4(finalColor + glow * 0.1, 0.4);
+                }
+            `;
+            function createShader(gl, type, source) {
+                const shader = gl.createShader(type);
+                gl.shaderSource(shader, source); gl.compileShader(shader);
+                if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                    console.error(gl.getShaderInfoLog(shader)); gl.deleteShader(shader); return null;
+                }
+                return shader;
+            }
+            const vertexShader = createShader(gl, gl.VERTEX_SHADER, vsSource);
+            const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fsSource);
+            const program = gl.createProgram();
+            gl.attachShader(program, vertexShader); gl.attachShader(program, fragmentShader);
+            gl.linkProgram(program);
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) { console.error(gl.getProgramInfoLog(program)); return; }
+            gl.useProgram(program);
+            const positionBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+                -1.0, -1.0,  1.0, -1.0, -1.0,  1.0,
+                -1.0,  1.0,  1.0, -1.0,  1.0,  1.0,
+            ]), gl.STATIC_DRAW);
+            const positionLocation = gl.getAttribLocation(program, 'a_position');
+            gl.enableVertexAttribArray(positionLocation);
+            gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+            const timeLocation = gl.getUniformLocation(program, 'u_time');
+            const resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
+            let startTime = Date.now();
+            function render() {
+                const time = (Date.now() - startTime) * 0.001;
+                gl.uniform1f(timeLocation, time);
+                gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
+                gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+                gl.drawArrays(gl.TRIANGLES, 0, 6);
+                requestAnimationFrame(render);
+            }
+            render();
+        }
+        window.addEventListener('load', initWebGL);
+    </script>
+</body>
+</html>
